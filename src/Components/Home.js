@@ -1,5 +1,4 @@
-// Home.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -11,45 +10,55 @@ import {
   TextField,
   Menu,
   MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
+  IconButton,
+  Tooltip,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate from react-router-dom
+import { useNavigate } from 'react-router-dom';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
-// Sample data for products and categories
 const categories = ['Accessories', 'Clothing', 'Jewelry', 'Beauty'];
-const shops = ['Shop A', 'Shop B', 'Shop C'];
-const products = [
-  { id: 1, name: 'Watch', price: 50, image: './images/watch.jpg', shop: 'Shop A', category: 'Accessories' },
-  { id: 2, name: 'Sunglasses', price: 20, image: './images/sunglasses.jpg', shop: 'Shop B', category: 'Accessories' },
-  { id: 3, name: 'T-Shirt', price: 15, image: './images/tshirt.jpg', shop: 'Shop A', category: 'Clothing' },
-  { id: 4, name: 'Jeans', price: 40, image: './images/jeans.jpg', shop: 'Shop C', category: 'Clothing' },
-  { id: 5, name: 'Necklace', price: 30, image: './images/necklace.jpg', shop: 'Shop B', category: 'Jewelry' },
-  { id: 6, name: 'Bracelet', price: 25, image: './images/bracelet.jpg', shop: 'Shop A', category: 'Jewelry' },
-  { id: 7, name: 'Lipstick', price: 10, image: './images/lipstick.jpg', shop: 'Shop C', category: 'Beauty' },
-  { id: 8, name: 'Perfume', price: 60, image: './images/perfume.jpg', shop: 'Shop B', category: 'Beauty' },
+const shops = ['Zudio', 'Trends', 'Max', 'Reliance'];
+const priceRanges = [
+  { label: 'Up to $20', value: 20 },
+  { label: 'Up to $50', value: 50 },
+  { label: 'Up to $100', value: 100 },
 ];
 
-const Home = ({ setCartItems }) => {
-  const navigate = useNavigate(); // Hook to navigate to different routes
+const products = [
+  { id: 1, name: 'Watch', price: 50, image: '/img2/watch.jpg', shop: 'Zudio', category: 'Accessories' },
+  { id: 2, name: 'Sunglasses', price: 20, image: '/img2/sunglasses.jpeg', shop: 'Trends', category: 'Accessories' },
+  { id: 3, name: 'T-Shirt', price: 15, image: './images/tshirt.jpg', shop: 'Zudio', category: 'Clothing' },
+  { id: 4, name: 'Jeans', price: 40, image: './images/jeans.jpg', shop: 'Reliance', category: 'Clothing' },
+  { id: 5, name: 'Necklace', price: 30, image: './images/necklace.jpg', shop: 'Trends', category: 'Jewelry' },
+  { id: 6, name: 'Bracelet', price: 25, image: './images/bracelet.jpg', shop: 'Zudio', category: 'Jewelry' },
+  { id: 7, name: 'Lipstick', price: 10, image: './images/lipstick.jpg', shop: 'Reliance', category: 'Beauty' },
+  { id: 8, name: 'Perfume', price: 60, image: './images/perfume.jpg', shop: 'Trends', category: 'Beauty' },
+];
+
+const Home = ({ setCartItems, cartItems = [] }) => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedShop, setSelectedShop] = useState('');
-  const [priceFilter, setPriceFilter] = useState('');
+  const [userAnchorEl, setUserAnchorEl] = useState(null);
+  const [selectedShop, setSelectedShop] = useState([]);
+  const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState([]);
+  const [userData, setUserData] = useState({ name: '', email: '' });
+  const [filtersApplied, setFiltersApplied] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
-  // Filter products based on selected criteria
-  const filteredProducts = products.filter(product => {
-    const shopMatch = selectedShop ? product.shop === selectedShop : true;
-    const priceMatch = priceFilter ? product.price <= priceFilter : true;
-    const nameMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const categoryMatch = selectedCategory.length ? selectedCategory.includes(product.category) : true;
+  useEffect(() => {
+    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (storedUserInfo) {
+      setUserData(storedUserInfo);
+    }
+  }, []);
 
-    return shopMatch && priceMatch && nameMatch && categoryMatch;
-  });
-
-  const handleClick = (event) => {
+  const handleFilterClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -57,113 +66,179 @@ const Home = ({ setCartItems }) => {
     setAnchorEl(null);
   };
 
-  const applyFilters = () => {
-    handleClose(); // Close the menu after applying filters
+  const handleUserButtonClick = (event) => {
+    setUserAnchorEl(event.currentTarget);
   };
+
+  const handleUserClose = () => {
+    setUserAnchorEl(null);
+  };
+
+  const handleShopCheckboxChange = (shop) => {
+    setSelectedShop((prev) =>
+      prev.includes(shop) ? prev.filter((s) => s !== shop) : [...prev, shop]
+    );
+  };
+
+  const handlePriceCheckboxChange = (price) => {
+    setSelectedPriceRanges((prev) =>
+      prev.includes(price) ? prev.filter((p) => p !== price) : [...prev, price]
+    );
+  };
+
+  const toggleShowAll = () => {
+    setShowAll((prev) => !prev);
+    if (!showAll) {
+      setSelectedShop([]);
+      setSelectedPriceRanges([]);
+    }
+  };
+
+  const applyFilters = () => {
+    setFiltersApplied(true);
+    handleClose();
+  };
+
+  const filteredProducts = products.filter((product) => {
+    if (showAll) return true;
+
+    const shopMatch = selectedShop.length ? selectedShop.includes(product.shop) : true;
+    const priceMatch = selectedPriceRanges.length ? selectedPriceRanges.some((price) => product.price <= price) : true;
+    const nameMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const categoryMatch = selectedCategory.length ? selectedCategory.includes(product.category) : true;
+
+    return shopMatch && priceMatch && nameMatch && categoryMatch;
+  });
 
   const addToCart = (product) => {
-    setCartItems((prevItems) => [...prevItems, product]); // Add product to cart
+    setCartItems((prevItems) => [...prevItems, product]);
   };
 
-  // New function to handle cart button click
   const goToCart = () => {
-    // Navigate to Cart page
-    navigate('/cart'); // Navigate without passing cart items as state
+    navigate('/cart');
   };
 
   return (
     <Container>
-      {/* Header */}
-      <header style={{ width: '100%', textAlign: 'center', padding: '5px', backgroundColor: '#FFA500', position: 'fixed', top: 0, zIndex: 1000 }}>
-        <Typography variant="h4" gutterBottom style={{ color: 'white', fontSize: '24px' }}>
-          ONLINE RETAIL SHOP
+      {/* Header Section with User and Cart Icons */}
+      <Grid container justifyContent="space-between" alignItems="center" style={{ marginTop: '20px' }}>
+        <Grid item>
+          <Button
+            variant="outlined"
+            onClick={handleUserButtonClick}
+            style={{ display: 'flex', alignItems: 'center' }}
+          >
+            <AccountCircleIcon style={{ marginRight: '5px' }} />
+            USER
+          </Button>
+          <Menu
+            anchorEl={userAnchorEl}
+            keepMounted
+            open={Boolean(userAnchorEl)}
+            onClose={handleUserClose}
+          >
+            <MenuItem>{`Username: ${userData.name}`}</MenuItem>
+            <MenuItem>{`Email: ${userData.email}`}</MenuItem>
+          </Menu>
+        </Grid>
+
+        <Grid item>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={goToCart}
+            style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}
+          >
+            <ShoppingCartIcon style={{ marginRight: '5px' }} />
+            Cart ({cartItems.length})
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleFilterClick}
+            style={{ display: 'flex', alignItems: 'center' }}
+          >
+            <FilterListIcon style={{ marginRight: '5px' }} />
+            Filter
+          </Button>
+          <Menu
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            {/* Show All Checkbox */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={showAll}
+                  onChange={toggleShowAll}
+                />
+              }
+              label="Show All"
+            />
+
+            {/* Shop Filter Checkboxes */}
+            <Typography variant="h6" style={{ padding: '10px' }}>Shops</Typography>
+            {shops.map((shop) => (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={selectedShop.includes(shop)}
+                    onChange={() => handleShopCheckboxChange(shop)}
+                  />
+                }
+                label={shop}
+                key={shop}
+              />
+            ))}
+
+            {/* Price Range Checkboxes */}
+            <Typography variant="h6" style={{ padding: '10px' }}>Price Ranges</Typography>
+            {priceRanges.map((priceRange) => (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={selectedPriceRanges.includes(priceRange.value)}
+                    onChange={() => handlePriceCheckboxChange(priceRange.value)}
+                  />
+                }
+                label={priceRange.label}
+                key={priceRange.value}
+              />
+            ))}
+
+            <MenuItem>
+              <Button onClick={applyFilters} variant="contained" color="primary">Apply Filters</Button>
+            </MenuItem>
+          </Menu>
+        </Grid>
+      </Grid>
+
+      {/* User Info and Search Section Positioned Below Header */}
+      <div style={{ textAlign: 'center', marginTop: '20px' }}>
+        <Typography variant="h6" style={{ marginBottom: '10px' }}>
+          {`Welcome, ${userData.name}`}
         </Typography>
-      </header>
-
-      {/* Cart Button */}
-      <div style={{ position: 'fixed', top: '70px', right: '20px', zIndex: 1000 }}>
-        <Button variant="contained" color="secondary" onClick={goToCart}>
-          Cart {/* No count here, since cartItems is not defined in this component */}
-        </Button>
-      </div>
-
-      {/* Search and Filter Section */}
-      <div style={{ textAlign: 'center', marginTop: '80px', marginBottom: '20px', padding: '20px', backgroundColor: '#f8f8f8' }}>
-        <TextField 
-          label="Search Products" 
-          variant="outlined" 
-          style={{ marginRight: '10px', width: '250px' }} 
-          value={searchTerm} 
-          onChange={(e) => setSearchTerm(e.target.value)} // Update search term on input change
+        <TextField
+          label="Search Products"
+          variant="outlined"
+          style={{ width: '250px', marginBottom: '20px' }}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Button variant="contained" color="primary" onClick={handleClick}>
-          Filter
-        </Button>
-        <Menu
-          anchorEl={anchorEl}
-          keepMounted
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
-        >
-          <div style={{ padding: '10px' }}>
-            <FormControl variant="outlined" style={{ marginBottom: '10px', minWidth: '120px' }}>
-              <InputLabel id="shop-label">Shop</InputLabel>
-              <Select 
-                labelId="shop-label" 
-                value={selectedShop} 
-                onChange={(e) => setSelectedShop(e.target.value)}
-              >
-                <MenuItem value=""><em>All Shops</em></MenuItem>
-                {shops.map((shop, index) => (
-                  <MenuItem key={index} value={shop}>{shop}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl variant="outlined" style={{ marginBottom: '10px', minWidth: '120px' }}>
-              <InputLabel id="category-label">Category</InputLabel>
-              <Select 
-                labelId="category-label" 
-                value={selectedCategory} 
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <MenuItem value=""><em>All Categories</em></MenuItem>
-                {categories.map((category, index) => (
-                  <MenuItem key={index} value={category}>{category}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl variant="outlined" style={{ minWidth: '120px' }}>
-              <InputLabel id="price-label">Max Price</InputLabel>
-              <Select 
-                labelId="price-label" 
-                value={priceFilter} 
-                onChange={(e) => setPriceFilter(e.target.value)}
-              >
-                <MenuItem value=""><em>All Prices</em></MenuItem>
-                <MenuItem value={20}>$20</MenuItem>
-                <MenuItem value={40}>$40</MenuItem>
-                <MenuItem value={60}>$60</MenuItem>
-              </Select>
-            </FormControl>
-            <Button variant="contained" color="primary" onClick={applyFilters} style={{ marginTop: '10px' }}>
-              Apply Filters
-            </Button>
-          </div>
-        </Menu>
       </div>
 
       {/* Available Categories */}
       <Typography variant="h5" align="center" gutterBottom style={{ fontWeight: 'bold', marginBottom: '20px' }}>
         Available Categories
       </Typography>
-
-      <Grid container spacing={3} justifyContent="center" style={{ marginBottom: '40px' }}>
-        {categories.map((category, index) => (
-          <Grid item key={index}>
-            <Button 
-              variant="contained" 
-              style={{ backgroundColor: '#FFA500', color: 'white', margin: '5px' }}
-              onClick={() => setSelectedCategory([category])}
+      <Grid container spacing={3} justifyContent="center">
+        {categories.map((category) => (
+          <Grid item key={category}>
+            <Button
+              variant="outlined"
+              onClick={() => setSelectedCategory(prev => prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category])}
             >
               {category}
             </Button>
@@ -171,29 +246,16 @@ const Home = ({ setCartItems }) => {
         ))}
       </Grid>
 
-      {/* Product Cards */}
-      <Grid container spacing={3}>
+      {/* Product List */}
+      <Grid container spacing={3} style={{ marginTop: '20px' }}>
         {filteredProducts.map((product) => (
           <Grid item xs={12} sm={6} md={4} key={product.id}>
             <Card>
-              <CardMedia
-                component="img"
-                alt={product.name}
-                height="140"
-                image={product.image}
-              />
+              <CardMedia component="img" height="140" image={product.image} alt={product.name} />
               <CardContent>
-                <Typography variant="h5" component="div">
-                  {product.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  ${product.price}
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  onClick={() => addToCart(product)} // Add product to cart on click
-                >
+                <Typography variant="h5">{product.name}</Typography>
+                <Typography variant="body2">${product.price}</Typography>
+                <Button variant="contained" color="primary" onClick={() => addToCart(product)}>
                   Add to Cart
                 </Button>
               </CardContent>

@@ -1,8 +1,10 @@
-// Cart.js
 import React from 'react';
 import { Container, Typography, Grid, Card, CardContent } from '@mui/material';
 
-const Cart = ({ cartItems }) => {
+const Cart = ({ cartItems }) => { // Removed setCartItems and isLoggedIn
+  // Calculate total price
+  const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
+
   return (
     <Container>
       <Typography variant="h4" gutterBottom>
@@ -24,6 +26,11 @@ const Cart = ({ cartItems }) => {
           ))
         )}
       </Grid>
+      {cartItems.length > 0 && ( // Only display total if there are items in the cart
+        <Typography variant="h5" gutterBottom style={{ marginTop: '20px' }}>
+          Total Price: ${totalPrice.toFixed(2)}
+        </Typography>
+      )}
     </Container>
   );
 };

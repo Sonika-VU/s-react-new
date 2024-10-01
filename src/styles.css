@@ -7,7 +7,7 @@ body {
 
 /* Login Container Styles */
 .login-container {
-  background-image: url('D:\workspace\s-react-new\src\images\login-bg.png'); /* Add your image */
+  background-image: url('C:/newWorkspace/s-react-new/src/images/login-bg.png'); /* Add your image */
   background-size: cover;
   background-position: center;
   height: 100vh;
