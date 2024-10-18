@@ -10,8 +10,6 @@ import {
   TextField,
   Menu,
   MenuItem,
-  IconButton,
-  Tooltip,
   Checkbox,
   FormControlLabel,
 } from '@mui/material';
@@ -20,8 +18,8 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
-const categories = ['Accessories', 'Clothing', 'Jewelry', 'Beauty'];
-const shops = ['Zudio', 'Trends', 'Max', 'Reliance'];
+const categories = ['Accessories', 'Clothing', 'Jewelry', 'Beauty', 'Grocery']; // Categories remain unchanged
+const shops = ['Zudio', 'Trends', 'Max', 'Reliance', 'FreshMart']; // Shops remain unchanged
 const priceRanges = [
   { label: 'Up to $20', value: 20 },
   { label: 'Up to $50', value: 50 },
@@ -37,19 +35,24 @@ const products = [
   { id: 6, name: 'Bracelet', price: 25, image: './images/bracelet.jpg', shop: 'Zudio', category: 'Jewelry' },
   { id: 7, name: 'Lipstick', price: 10, image: './images/lipstick.jpg', shop: 'Reliance', category: 'Beauty' },
   { id: 8, name: 'Perfume', price: 60, image: './images/perfume.jpg', shop: 'Trends', category: 'Beauty' },
+  
+  // New Grocery Products
+  { id: 9, name: 'Apples', price: 5, image: './images/apples.jpg', shop: 'FreshMart', category: 'Grocery' },
+  { id: 10, name: 'Milk', price: 3, image: './images/milk.jpg', shop: 'FreshMart', category: 'Grocery' },
+  { id: 11, name: 'Bread', price: 2, image: './images/bread.jpg', shop: 'FreshMart', category: 'Grocery' },
+  { id: 12, name: 'Eggs', price: 4, image: './images/eggs.jpg', shop: 'FreshMart', category: 'Grocery' },
 ];
 
 const Home = ({ setCartItems, cartItems = [] }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [userAnchorEl, setUserAnchorEl] = useState(null);
-  const [selectedShop, setSelectedShop] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState([]); // Changed to handle selected categories
   const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState([]);
   const [userData, setUserData] = useState({ name: '', email: '' });
-  const [filtersApplied, setFiltersApplied] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [selectedShop, setSelectedShop] = useState(''); // Track the selected shop for filtering
 
   useEffect(() => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -74,9 +77,9 @@ const Home = ({ setCartItems, cartItems = [] }) => {
     setUserAnchorEl(null);
   };
 
-  const handleShopCheckboxChange = (shop) => {
-    setSelectedShop((prev) =>
-      prev.includes(shop) ? prev.filter((s) => s !== shop) : [...prev, shop]
+  const handleCategoryCheckboxChange = (category) => {
+    setSelectedCategory((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
   };
 
@@ -89,25 +92,24 @@ const Home = ({ setCartItems, cartItems = [] }) => {
   const toggleShowAll = () => {
     setShowAll((prev) => !prev);
     if (!showAll) {
-      setSelectedShop([]);
+      setSelectedCategory([]);
       setSelectedPriceRanges([]);
+      setSelectedShop(''); // Reset the selected shop when "Show All" is toggled
     }
   };
 
   const applyFilters = () => {
-    setFiltersApplied(true);
     handleClose();
   };
 
+  // Update to handle category selection and product filtering
   const filteredProducts = products.filter((product) => {
-    if (showAll) return true;
+    const matchesCategory = selectedCategory.length ? selectedCategory.includes(product.category) : true;
+    const matchesPrice = selectedPriceRanges.length ? selectedPriceRanges.some(price => product.price <= price) : true;
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesShop = selectedShop ? product.shop === selectedShop : true;
 
-    const shopMatch = selectedShop.length ? selectedShop.includes(product.shop) : true;
-    const priceMatch = selectedPriceRanges.length ? selectedPriceRanges.some((price) => product.price <= price) : true;
-    const nameMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const categoryMatch = selectedCategory.length ? selectedCategory.includes(product.category) : true;
-
-    return shopMatch && priceMatch && nameMatch && categoryMatch;
+    return matchesCategory && matchesPrice && matchesSearch && matchesShop;
   });
 
   const addToCart = (product) => {
@@ -178,18 +180,18 @@ const Home = ({ setCartItems, cartItems = [] }) => {
               label="Show All"
             />
 
-            {/* Shop Filter Checkboxes */}
-            <Typography variant="h6" style={{ padding: '10px' }}>Shops</Typography>
-            {shops.map((shop) => (
+            {/* Category Filter Checkboxes */}
+            <Typography variant="h6" style={{ padding: '10px' }}>Categories</Typography>
+            {categories.map((category) => (
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={selectedShop.includes(shop)}
-                    onChange={() => handleShopCheckboxChange(shop)}
+                    checked={selectedCategory.includes(category)}
+                    onChange={() => handleCategoryCheckboxChange(category)}
                   />
                 }
-                label={shop}
-                key={shop}
+                label={category}
+                key={category}
               />
             ))}
 
@@ -221,26 +223,28 @@ const Home = ({ setCartItems, cartItems = [] }) => {
           {`Welcome, ${userData.name}`}
         </Typography>
         <TextField
-          label="Search Products"
+          label="Search"
           variant="outlined"
-          style={{ width: '250px', marginBottom: '20px' }}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {/* Available Categories */}
+      {/* Available Shops */}
       <Typography variant="h5" align="center" gutterBottom style={{ fontWeight: 'bold', marginBottom: '20px' }}>
-        Available Categories
+        Available Shops
       </Typography>
       <Grid container spacing={3} justifyContent="center">
-        {categories.map((category) => (
-          <Grid item key={category}>
+        {shops.map((shop) => (
+          <Grid item key={shop}>
             <Button
               variant="outlined"
-              onClick={() => setSelectedCategory(prev => prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category])}
+              onClick={() => {
+                setSelectedShop(shop); // Set the selected shop for filtering
+                setSearchTerm(''); // Clear search term when a shop is clicked
+              }}
             >
-              {category}
+              {shop}
             </Button>
           </Grid>
         ))}

@@ -21,12 +21,17 @@ function LoginRegistration({ setRole, handleLogin }) {
 
   const handleFormLogin = () => {
     if (localRole === 'customer') {
-      // Store both name and email in localStorage
+      // Store both name and email in localStorage for customer
       localStorage.setItem('userInfo', JSON.stringify({ name, email }));
       handleLogin();
       navigate('/home');
+    } else if (localRole === 'admin') {
+      // Store both name and email in localStorage for admin
+      localStorage.setItem('userInfo', JSON.stringify({ name, email }));
+      handleLogin();
+      navigate('/admin'); // Redirect to admin page
     } else {
-      alert('Only customers are allowed.');
+      alert('Please select a role to continue.');
     }
   };
 
